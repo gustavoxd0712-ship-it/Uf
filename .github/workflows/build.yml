@@ -1,0 +1,35 @@
+name: Compilar RubiMod
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Descomprimir el proyecto
+        run: unzip -o rubimod-source-1.1.0.zip
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+
+      - name: Instalar Gradle 4.9
+        run: |
+          curl -fsSL https://services.gradle.org/distributions/gradle-4.9-bin.zip -o gradle.zip
+          unzip -q gradle.zip -d "$HOME"
+          echo "$HOME/gradle-4.9/bin" >> "$GITHUB_PATH"
+
+      - name: Compilar el mod
+        run: gradle setupCIWorkspace build --no-daemon --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rubimod-jar
+          path: build/libs/*.jar
+          if-no-files-found: error
